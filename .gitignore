@@ -21,7 +21,6 @@ simulink_cache.xml
 # Workspace and data files
 *.mat
 *.fig
-*.csv
 *.log
 *.out
 *.txt
