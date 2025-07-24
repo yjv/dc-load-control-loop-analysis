@@ -116,7 +116,7 @@ function interactive_control_loop_margin_plot
         end
 
         if c_g > 0
-            c_g = 10^(c_g - 13);
+            c_g = 10^(c_g - 12);
         end
 
         % Show progress dialog

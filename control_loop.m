@@ -21,6 +21,6 @@ function [H, H_transient, H_loop_gain, Y_i, Y_o, G1, G2, G3, G4, H1, H2, H3, vds
     H3 = normalize_tf_from_sym(H3);
     
     H_loop_gain = normalize_tf(-H1*H2*H3*G2*G3);
-    H = normalize_tf(G1*G2*G3)/(1+H_loop_gain);
+    H = normalize_tf(G1*G2*G3)/(1+H_loop_gain)
     H_transient = G4/(1+H_loop_gain);
 end

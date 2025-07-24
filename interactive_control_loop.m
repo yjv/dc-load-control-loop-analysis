@@ -15,8 +15,8 @@ function interactive_control_loop()
     title('H_lim Pole Zero');
     f_rl = figure;
     title('H_lim Root Locus');
-    f_bode = figure;
-    title('H_lim bode');
+    f_step_response = figure;
+    title('H Step Response');
 
     % Axes for Bode plot
     % Axes for H
@@ -103,7 +103,7 @@ function interactive_control_loop()
         end
 
         if c_g > 0
-            c_g = 10^(c_g - 13); %Pf
+            c_g = 10^(c_g - 12); %Pf
         end
 
         [H, H_transient, H_loop_gain, ~, ~, ~, ~, ~, ~, ~, ~, ~, vds, vgs, id] = control_loop(vds_dc, vgs_dc, Z_o_p_r, Z_o_s_r, r_g, c_g, 1, 1, 800);
@@ -136,13 +136,6 @@ function interactive_control_loop()
         H_lim = zpk(zeros_lim, poles_lim, gain);
         H_lim = gain/dcgain(H_lim)*H_lim;
 
-        figure(f_bode);
-        bode(H_lim, w);
-        figure(f_rl);
-        rlocus(H_lim);
-        figure(f_pz);
-        pzmap(H_lim);
-
         if phase_margin < 0 || gain_margin > 0
             stability = 'unstable';
         elseif phase_margin < 40 || gain_margin > -6
@@ -160,7 +153,7 @@ function interactive_control_loop()
         semilogx(ax1, f, phase_H, 'r--', 'LineWidth', 1.5); ylabel(ax1, '∠H (°)');
         xlabel(ax1, 'Frequency (Hz)'); grid(ax1, 'on');
         title(ax1, sprintf('H: Vds=%.2fV, Vgs=%.2fV, I_s=%.2fA, R_g=%.2f\\Omega, C_g=%.2fpF', ...
-            vds_dc, vgs_dc, id_dc, r_g, c_g*10e12));
+            vds_dc, vgs_dc, id_dc, r_g, c_g*1e12));
 
         % Plot H_transient
         cla(ax2); yyaxis(ax2, 'left');
@@ -169,7 +162,7 @@ function interactive_control_loop()
         semilogx(ax2, f, phase_H_transient, 'r--', 'LineWidth', 1.5); ylabel(ax2, '∠H_{transient} (°)');
         xlabel(ax2, 'Frequency (Hz)'); grid(ax2, 'on');
         title(ax2, sprintf('H_{transient}: Vds=%.2fV, Vgs=%.2fV, I_s=%.2fA, R_g=%.2f\\Omega, C_g=%.2fpF', ...
-            vds_dc, vgs_dc, id_dc, r_g, c_g*10e12));
+            vds_dc, vgs_dc, id_dc, r_g, c_g*1e12));
 
         % Plot H_loop_gain
         cla(ax3); yyaxis(ax3, 'left');
@@ -188,5 +181,15 @@ function interactive_control_loop()
         title(ax3, sprintf('H_{loop gain}: Vds=%.2fV, Vgs=%.2fV, R_g=%.2f\\Omega\nMargins: %.2fdB %.2f° (%s)\n0 dB %.2f Hz, -180° %.2f Hz', ...
             vds_dc, vgs_dc, r_g, gain_margin, phase_margin, stability, f_gain0, f_phase_neg180));
 
+        figure(f_rl);
+        rlocus(H_lim);
+        figure(f_pz);
+        pzmap(H_lim);
+        figure(f_step_response);
+        sp = stepplot(H_lim);
+        sp.Characteristics.PeakResponse.Visible = 'on';
+        sp.Characteristics.RiseTime.Visible = 'on';
+        sp.Characteristics.SettlingTime.Visible = 'on';
+        sp.Characteristics.SteadyState.Visible = 'on';
     end
 end
