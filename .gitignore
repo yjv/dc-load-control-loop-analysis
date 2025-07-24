@@ -1,0 +1,42 @@
+# MATLAB temporary, backup, and autosave files
+*.asv
+*.m~
+*.bak
+*.autosave
+
+# Simulink cache and code generation folders
+slprj/
+simulink_cache.xml
+*.slxc
+*.slx.autosave
+*.mdl.autosave
+
+# Simulink generated files
+*.slxc
+*.slxp
+*.sldd
+*.slx.autosave
+*.mdl.autosave
+
+# Workspace and data files
+*.mat
+*.fig
+*.csv
+*.log
+*.out
+*.txt
+
+# User-specific and OS files
+.DS_Store
+Thumbs.db
+
+# Project-specific folders
+*.prj
+*.tmf
+*.mexa64
+*.mexw64
+*.mexmaci64
+
+# Ignore OneDrive/Cloud sync files
+*.tmp.driveupload
+~$*
