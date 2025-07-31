@@ -75,19 +75,20 @@ function [C_iss, C_oss, C_rss, capacitance_vds, capacitances] = fet_capacitances
     
     ];
 
+    % C_iss	C_oss	C_rss
+    capacitances = struct( ...
+        'C_iss', capacitances(:, 1), ...
+        'C_oss', capacitances(:, 2), ...
+        'C_rss', capacitances(:, 3)...
+    );
+
     if ~nargin
     
-        % Extract individual capacitances
-        C_iss = capacitances(:,1);
-        C_oss = capacitances(:,2);
-        C_rss = capacitances(:,3);
-
         % Plotting
         figure;
-    
-        loglog(capacitance_vds, C_iss*1e12, 'LineWidth', 2); hold on;
-        loglog(capacitance_vds, C_oss*1e12, 'LineWidth', 2);
-        loglog(capacitance_vds, C_rss*1e12, 'LineWidth', 2);
+        loglog(capacitance_vds, capacitances.C_iss * 1e12, 'LineWidth', 2); hold on;
+        loglog(capacitance_vds, capacitances.C_oss * 1e12, 'LineWidth', 2);
+        loglog(capacitance_vds, capacitances.C_rss * 1e12, 'LineWidth', 2);
         grid on;
         xlabel('V_{DS} (V)');
         ylabel('Capacitance (pF)');
@@ -97,9 +98,9 @@ function [C_iss, C_oss, C_rss, capacitance_vds, capacitances] = fet_capacitances
         if vds > max(capacitance_vds)
             error('Target is outside the range of the vector.');
         end
-        
-        C_iss = interp1(capacitance_vds, capacitances(:, 1), vds);
-        C_oss = interp1(capacitance_vds, capacitances(:, 2), vds);
-        C_rss = interp1(capacitance_vds, capacitances(:, 3), vds);
+
+        C_iss = interp1(capacitance_vds, capacitances.C_iss, vds);
+        C_oss = interp1(capacitance_vds, capacitances.C_oss, vds);
+        C_rss = interp1(capacitance_vds, capacitances.C_rss, vds);
     end
 end

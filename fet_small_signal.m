@@ -1,4 +1,4 @@
-function [Y_i, Y_o, Y_i_sym, Y_o_sym, I, I_sol, sol, g_m_r, r_o_r, C_iss_r, C_oss_r, C_rss_r, vds, vgs, id] = fet_small_signal(Z_i_s_r, Z_o_p_r, Z_o_s_r, r_g, c_g, vds_divisor, vgs_divisor, max_vds)
+function [Y_i, Y_o, Y_i_sym, Y_o_sym, I, I_sol, V_sol, g_m_r, r_o_r, C_iss_r, C_oss_r, C_rss_r, vds, vgs, id] = fet_small_signal(Z_i_s_r, Z_o_p_r, Z_o_s_r, r_g, c_g, vds_divisor, vgs_divisor, max_vds)
     C_ds = sym('C_ds');
     C_gd = sym('C_gd');
     C_gs = sym('C_gs');
@@ -32,36 +32,43 @@ function [Y_i, Y_o, Y_i_sym, Y_o_sym, I, I_sol, sol, g_m_r, r_o_r, C_iss_r, C_os
     I_r_o=V_ds/r_o;
     I_C_ds=V_ds*s*C_ds;
 
+    % currents in terms of small signal capacitances and small signal gm
+    % and r_o
     I=collect([ ...
         g_m*V_gs+I_r_o+I_C_ds-I_C_gd %I_d
         I_C_gs+g_m*V_gs+I_r_o+I_C_ds %I_s
         I_C_gd+I_C_gs                %I_g
     ], [V_gs, V_ds]);
 
-    I_sol = subs(I, [C_ds, C_gs, C_gd], [C_oss-C_rss (C_iss-C_rss + c_g) C_rss]);
+    % replace small signal capacitances with datasheet capacitances
+    I = subs(I, [C_ds, C_gs, C_gd], [C_oss-C_rss (C_iss-C_rss + c_g) C_rss]);
 
-    V_ds_eq = V_ds == V_o - Z_o_s * I_sol(1);
-    V_gs_eq = V_gs == V_i - Z_i_s * I_sol(3);
+    V_ds_eq = V_ds == V_o - Z_o_s * I(1);
+    V_gs_eq = V_gs == V_i - Z_i_s * I(3);
 
+    % solve for V_ds and V_gs in terms of voltages on the sources coming
+    % into the drain and gate
     [V_ds_sol, V_gs_sol] = solve([V_ds_eq V_gs_eq], [V_ds V_gs]);
-    sol = {collect(V_ds_sol, [V_i, V_o]), collect(V_gs_sol, [V_i, V_o])};
+    V_sol = struct('V_ds', collect(V_ds_sol, [V_i, V_o]), 'V_gs', collect(V_gs_sol, [V_i, V_o]));
 
-    I_sol = collect(simplify(subs(I_sol, [V_ds V_gs], [V_ds_sol V_gs_sol])), [V_i, V_o]);
+    I_sol = collect(simplify(subs(I, [V_ds V_gs], [V_sol.V_ds V_sol.V_gs])), [V_i, V_o]);
 
-    Y_i_sym = subs(I_sol(2), [V_o V_i], [0 1]);
-    Y_o_sym = subs(I_sol(2), [V_o V_i], [1 0]);
+    I = struct( ...
+        'I_d', I(1),...
+        'I_s', I(2),...
+        'I_g', I(3)...
+    );
 
-    [g_m_r, r_o_r, vds, vgs, id] = drain_curves(0);
+    I_sol = struct( ...
+        'I_d', I_sol(1),...
+        'I_s', I_sol(2),...
+        'I_g', I_sol(3)...
+    );
 
-    vds = vds(1, 1:min([length(vds(vds <= max_vds))+1 length(vds)]));
-    id = id(:, 1:length(vds));
-    g_m_r = g_m_r(:, 1:length(vds));
-    r_o_r = r_o_r(:, 1:length(vds));
-    vds = vds(1, 1:vds_divisor:end);
-    g_m_r = g_m_r(1:vgs_divisor:end, 1:vds_divisor:end);
-    r_o_r = r_o_r(1:vgs_divisor:end, 1:vds_divisor:end);
-    id = id(1:vgs_divisor:end, 1:vds_divisor:end);
-    vgs = vgs(1:vgs_divisor:end, 1);
+    Y_i_sym = subs(I_sol.I_s, [V_o V_i], [0 1]);
+    Y_o_sym = subs(I_sol.I_s, [V_o V_i], [1 0]);
+
+    [g_m_r, r_o_r, vds, vgs, id] = drain_curves(vds_divisor, vgs_divisor, max_vds);
 
     [C_iss_r, C_oss_r, C_rss_r] = fet_capacitances(vds);
 

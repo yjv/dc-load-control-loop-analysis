@@ -124,17 +124,7 @@ function interactive_control_loop()
 
         [gain_margin, phase_margin, f_gain0, f_phase_neg180, f_gain20, f_gainn20] = margins_from_loop_gain(mag_H_loop_gain, phase_H_loop_gain, f);
 
-        w_gain20 = 2*pi*f_gain20;
-        w_gainn20 = 2*pi*f_gainn20;
-
-        zeros = zero(H);
-        zeros_lim = zeros((abs(zeros) >= w_gain20) & (abs(zeros) <= w_gainn20));
-        poles = pole(H);
-        poles_lim = poles((abs(poles) >= w_gain20) & (abs(poles) <= w_gainn20));
-        gain = dcgain(H);
-
-        H_lim = zpk(zeros_lim, poles_lim, gain);
-        H_lim = gain/dcgain(H_lim)*H_lim;
+        H_lim = limit_tf_to_frequencies(H, f_gain20, f_gainn20)
 
         if phase_margin < 0 || gain_margin > 0
             stability = 'unstable';

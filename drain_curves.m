@@ -1,4 +1,4 @@
-function [g_m, r_o, vds, vgs, id] = drain_curves(~)
+function [g_m, r_o, vds, vgs, id] = drain_curves(vds_divisor, vgs_divisor, max_vds)
     persistent vds_loaded;
     persistent vgs_loaded;
     persistent id_loaded;
@@ -10,11 +10,7 @@ function [g_m, r_o, vds, vgs, id] = drain_curves(~)
         data = readmatrix('MSC025SMA120B4/MSC025SMA120B4_drain_curves_2d.csv');
         vds_loaded = data(1,2:end);
         vgs_loaded = data(2:end,1);
-        id_loaded  = data(2:end,2:end);
-        
-        % vds = vds(vds <= 60);
-    
-        id_loaded = id_loaded(:, 1:length(vds_loaded));
+        id_loaded  = data(2:end,2:end);        
     end
 
     vds = vds_loaded;
@@ -79,7 +75,29 @@ function [g_m, r_o, vds, vgs, id] = drain_curves(~)
         fprintf('Max ∂I_d/∂V_{gs} at V_{ds} = %.4f, V_{gs} = %.4f, dI_d/dV_{gs} = %.4f\n', ...
                 vgs_max2, vds_max2, dId_dVgs(vgs_idx2, vds_idx2));
     else
+        if isempty(vds_divisor)
+            vds_divisor = 1;
+        end
+    
+        if isempty(vgs_divisor)
+            vgs_divisor = 1;
+        end
+    
+        if isempty(max_vds)
+            max_vds = 800;
+        end
+
         g_m = dId_dVgs;
         r_o = 1 ./ dId_dVds;
+
+        vds = vds(1, 1:min([length(vds(vds <= max_vds))+1 length(vds)]));
+        id = id(:, 1:length(vds));
+        g_m = g_m(:, 1:length(vds));
+        r_o = r_o(:, 1:length(vds));
+        vds = vds(1, 1:vds_divisor:end);
+        g_m = g_m(1:vgs_divisor:end, 1:vds_divisor:end);
+        r_o = r_o(1:vgs_divisor:end, 1:vds_divisor:end);
+        id = id(1:vgs_divisor:end, 1:vds_divisor:end);
+        vgs = vgs(1:vgs_divisor:end, 1);
     end
 end

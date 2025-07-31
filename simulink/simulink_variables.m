@@ -2,17 +2,8 @@ function [vds, vgs, id, capacitances, capacitance_vds, G1, G2, H1, H2, H3] = sim
 [~, ~, ~, ~, vds, vgs, id, capacitance_vds, capacitances, Y_iss_g, Y_oss_g, Y_rss_g, Y_iss_d, Y_oss_d, Y_rss_d, G_g, G_d, G_s] = fet_large_signal(Z_i_s, Z_o_p, Z_o_s, r_g, c_g, vds_divisor, vgs_divisor, max_vds);
 [~, ~, ~, ~, ~, G1, G2, ~, ~, H1, H2, H3, ~, ~, ~] = control_loop(60, 10, Z_o_p, Z_o_s, r_g, c_g, 1, 1, max_vds);
 
-function [num, den] = numden_coeffs(H_sym)
-    s = sym('s');
-    [num, den] = numden(H_sym);
-    num = coeffs(num, s, 'All');
-    den = coeffs(den, s, 'All');
-    num = num ./ den(1);
-    den = den ./ den(1);
-end
-
 [Y_iss_g_num, Y_iss_g_den] = numden_coeffs(Y_iss_g);
-create_tf_subsystem(Y_iss_g_num, Y_iss_g_den, 'LoopSimulation', 'FET/Y_iss_g_test', 'v_i', 'v_gs_iss');
+createTFSubsystem(Y_iss_g_num, Y_iss_g_den, 'LoopSimulation', 'FET/Y_iss_g_test', 'v_i', 'v_gs_iss');
 [Y_oss_g_num, Y_oss_g_den] = numden_coeffs(Y_oss_g);
 [Y_rss_g_num, Y_rss_g_den] = numden_coeffs(Y_rss_g);
 [Y_iss_d_num, Y_iss_d_den] = numden_coeffs(Y_iss_d);
