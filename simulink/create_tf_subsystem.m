@@ -31,18 +31,6 @@ function create_tf_subsystem(sym_num, sym_den, modelName, subsystemName, inputNa
     %     error('Denominator polynomial must be monic (leading coefficient = 1).');
     % end
     % 
-    %% Open/Create model
-    if exist(modelName)
-        load_system(modelName);
-    else
-        new_system(modelName)
-        open_system(modelName)
-    end
-    
-    % Delete existing block if exists
-    if ~isempty(find_system(modelName,'SearchDepth',3,'Name',subsystemName))
-        delete_block([modelName '/' subsystemName]);
-    end
     
     % Add subsystem block
     add_block('built-in/Subsystem', [modelName '/' subsystemName]);
@@ -87,7 +75,7 @@ function create_tf_subsystem(sym_num, sym_den, modelName, subsystemName, inputNa
     C_oss = sym('C_oss','real');
     C_rss = sym('C_rss','real');
 
-    matlabFunctionBlock([blkPath '/CoeffCalculator'], sym_num, sym_den, 'Vars', {C_iss, C_oss, C_rss}, 'Outputs', {'num','den'})
+    matlabFunctionBlock([blkPath '/CoeffCalculator'], sym_num', sym_den', 'Vars', {C_iss, C_oss, C_rss}, 'Outputs', {'num','den'});
 
     %% Connect parameter inputs to MATLAB Function block
     add_line(blkPath, 'C_iss/1', 'CoeffCalculator/1', 'autorouting', 'on');
