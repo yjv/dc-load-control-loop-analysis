@@ -106,7 +106,7 @@ function interactive_control_loop()
             c_g = 10^(c_g - 12); %Pf
         end
 
-        [H, H_transient, H_loop_gain, ~, ~, ~, ~, ~, ~, ~, ~, ~, vds, vgs, id] = control_loop(vds_dc, vgs_dc, Z_o_p_r, Z_o_s_r, r_g, c_g, 1, 1, 800);
+        [H, H_transient, H_loop_gain, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~, vds, vgs, id] = control_loop(vds_dc, vgs_dc, Z_o_p_r, Z_o_s_r, r_g, c_g, 1, 1, 800);
 
         pzmap(H);
 

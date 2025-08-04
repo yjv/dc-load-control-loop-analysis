@@ -81,7 +81,7 @@ function interactive_control_loop_margin_plot
             w = 2 * pi * f;
         end
 
-        [~, ~, ~, Y_i, ~, ~, G2, ~, ~, H1, H2, H3, vds, vgs, id] = control_loop(60, 10, Z_o_p_r, Z_o_s_r, r_g, c_g, vds_divisor, vgs_divisor, max_vds);
+        [~, ~, ~, Y_i, ~, ~, G2, ~, ~, ~, H1, H2, H3, vds, vgs, id] = control_loop(60, 10, Z_o_p_r, Z_o_s_r, r_g, c_g, vds_divisor, vgs_divisor, max_vds);
 
         Y_i_tf = Y_i();
 
