@@ -1,5 +1,47 @@
 function sys_fit = derive_opa210_gain(~)
-    % Your frequency data (Hz)
+% DERIVE_OPA210_GAIN Generate OPA210 operational amplifier gain transfer function model
+%
+% This function provides a fitted transfer function model for the OPA210 operational
+% amplifier based on measured frequency response data from the datasheet. The model
+% captures the amplifier's gain characteristics across frequency for use in control
+% loop analysis.
+%
+% USAGE:
+%   sys_fit = derive_opa210_gain()           % Return fitted transfer function with plotting
+%   sys_fit = derive_opa210_gain(0)          % Return fitted transfer function only
+%
+% OUTPUTS:
+%   sys_fit - Symbolic transfer function model of OPA210 gain characteristics
+%
+% TRANSFER FUNCTION MODEL:
+%   The fitted model represents the OPA210 gain with appropriate poles and zeros
+%   to match the measured frequency response characteristics from the datasheet.
+%
+% DATA SOURCE:
+%   Frequency response data is based on OPA210 datasheet specifications
+%   covering the range from 0.1 Hz to 40 MHz. Both magnitude and phase
+%   data are available for fitting.
+%
+% VISUALIZATION:
+%   When called with no arguments (~nargin), the function displays:
+%   - Single figure with Bode plot comparing fitted model vs. measured data
+%
+% EXAMPLE:
+%   % Get OPA210 gain model with visualization
+%   H_opamp = derive_opa210_gain();
+%
+%   % Get model without plotting
+%   H_opamp = derive_opa210_gain(0);
+%
+% NOTES:
+%   - Model is based on datasheet frequency response data
+%   - Fitted to match gain rolloff and phase characteristics
+%   - Used in control loop analysis for G2 transfer function
+%
+% Author: Yosef Deray
+% Date: 2025
+% Version: 1.0
+    % Frequency points for OPA210 gain measurement (Hz)
     frequency = [
     0.125892541179417
     0.158489319246111
@@ -88,11 +130,11 @@ function sys_fit = derive_opa210_gain(~)
     3.16227766016838e7
     3.98107170553497e7
     
-    ]';  % paste your frequency vector here
+    ]';  % Frequency points for OPA210 gain measurement (Hz)
     
     w = 2*pi*frequency;
     
-    % Your gain data (dB)
+    % OPA210 gain data from datasheet (dB)
     gain_db = [
     130
     130
@@ -180,9 +222,9 @@ function sys_fit = derive_opa210_gain(~)
     -1.8
     -2.8
     -3.6
-    ]';   % paste your gain vector here
+    ]';   % OPA210 gain magnitude data (dB)
     
-    % Your phase (degrees)
+    % OPA210 phase data from datasheet (degrees)
     phase = [
     138.5
     138.2
@@ -270,61 +312,63 @@ function sys_fit = derive_opa210_gain(~)
     38
     29
     20
-    ]';   % paste your phase vector here
+    ]';   % OPA210 phase data from datasheet (degrees)
     
+    % Phase offset adjustment for fitting. This was added after discovering 
+    % the points above were measured with an accidental -40 degree phase shift when getting them from the datasheet.
     phase = phase + 40;
 
     % Convert gain in dB to magnitude
     mag = 10.^(gain_db / 20);
     
     % Convert phase in degrees to radians
-    phase_rad = deg2rad(phase);  % your measured phase
-    
-    % Create complex frequency response
-    H = mag .* exp(1j * phase_rad);
+    phase_rad = deg2rad(phase);
     
     syms s
+    % Fitted transfer function model for OPA210 gain characteristics
     sys_fit = 10^(130/20)/(s/(2*pi*5.25)+1)*(s/(2*pi*34e6)+1)/(s/(2*pi*55e6)+1)^2;
     
     if ~nargin
+        % Visualization mode: create Bode plot comparing fitted model to datasheet data
         sys_fit_tf = tf_from_sym(sys_fit);
-        % Compute magnitude and phase of fitted system
+        
+        % Compute magnitude and phase of fitted transfer function
         [mag_fit, phase_fit] = bode(sys_fit_tf, w);
         mag_fit = squeeze(mag_fit);
         phase_fit = squeeze(phase_fit);
         
+        % Convert magnitude to dB for comparison with datasheet data
         mag_fit_db = 20*log10(mag_fit);
         
-        % Create figure and axes
+        % Create figure for Bode plot visualization
         figure;
         
-        % Set up axes for background image
+        % Configure axes properties
         ax = axes;
         hold on;
         
-        % Set limits to match your data range
-        ax.YDir = 'normal';  % flip y-axis so it's not upside down
-        ax.XScale = 'log';   % semilog scale
+        ax.YDir = 'normal';  % Normal y-axis direction
+        ax.XScale = 'log';   % Logarithmic frequency scale
         
-        % Overlay plot on top of image
+        % Plot magnitude comparison (left y-axis)
         yyaxis left
         semilogx(frequency, mag_fit_db, 'r-', 'LineWidth', 1.5); hold on;
         semilogx(frequency(1:length(gain_db)), gain_db, 'b.', 'MarkerSize', 10);
         ylabel('Magnitude (dB)');
-        ylim([min(min(mag_fit_db), min(gain_db)) - 5, max(max(mag_fit_db), max(gain_db)) + 5]);    % adjust based on your dB + phase range
+        ylim([min(min(mag_fit_db), min(gain_db)) - 5, max(max(mag_fit_db), max(gain_db)) + 5]);    % Auto-scale y-axis with margin
         
+        % Plot phase comparison (right y-axis) - both fitted model and datasheet data
         yyaxis right
         semilogx(frequency, phase_fit, 'g--', 'LineWidth', 1.5);
         semilogx(frequency(1:length(phase)), phase, 'm.', 'MarkerSize', 10);
         ylabel('Phase (degrees)');
-        ylim([min(min(phase_fit), min(phase)) - 10, max(max(phase_fit), max(phase)) + 10]);    % adjust based on your dB + phase range
+        ylim([min(min(phase_fit), min(phase)) - 10, max(max(phase_fit), max(phase)) + 10]);    % Auto-scale y-axis with margin
         
+        % Configure plot appearance
         xlabel('Frequency (Hz)');
         xlim([min(frequency), max(frequency)]);
         
         legend('Fitted Mag', 'Data Mag', 'Fitted Phase', 'Data Phase', 'Location', 'Best');
         grid on;
-        figure;
-        pzmap(sys_fit_tf)
     end
 end

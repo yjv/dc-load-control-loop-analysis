@@ -1,4 +1,44 @@
 function generate_components(H)
+% GENERATE_COMPONENTS Generate physical component values from transfer function
+%
+% This function performs partial fraction expansion on a transfer function and
+% maps the resulting terms to physical RLC component values. It's useful for
+% synthesizing equivalent circuits from transfer function models, particularly
+% for creating Simscape models or understanding the physical meaning of
+% transfer function poles and zeros.
+%
+% USAGE:
+%   generate_components(H)
+%
+% INPUTS:
+%   H - Transfer function object (tf)
+%
+% OUTPUTS:
+%   The function displays:
+%   - Residues from partial fraction expansion
+%   - Poles from partial fraction expansion  
+%   - Direct terms (feedthrough)
+%   - Component list with RLC values for circuit synthesis
+%
+% SYNTHESIS METHOD:
+%   Uses Foster I synthesis approach:
+%   - Real negative poles map to RC or RL branches
+%   - Complex conjugate poles map to RLC branches
+%   - Residues determine component values
+%
+% EXAMPLE:
+%   % Generate components for a transfer function
+%   H = tf([1 2], [1 3 2]);
+%   generate_components(H);
+%
+% NOTES:
+%   - Provides starting point for Simscape model generation
+%   - Component values may need refinement for practical implementation
+%   - Useful for understanding physical meaning of transfer function dynamics
+%
+% Author: Yosef Deray
+% Date: 2025
+% Version: 1.0
     
     num = H.Numerator{1};
     den = H.Denominator{1};

@@ -1,7 +1,47 @@
 function [C_iss, C_oss, C_rss, capacitance_vds, capacitances] = fet_capacitances(vds)
+% FET_CAPACITANCES Extract MOSFET capacitance characteristics from FET datasheet
+%
+% This function provides MSC017SMA120B4N MOSFET capacitance data (C_iss, C_oss, C_rss) as a function
+% of drain-source voltage. The data is based on datasheet plots of measured characteristics and supports
+% both analysis and visualization modes.
+%
+% USAGE:
+%   [C_iss, C_oss, C_rss] = fet_capacitances(vds)
+%   fet_capacitances()  % Visualization mode
+%
+% INPUTS:
+%   vds - Drain-source voltage for capacitance lookup (V)
+%
+% OUTPUTS:
+%   C_iss            - Input capacitance at specified Vds (F)
+%   C_oss            - Output capacitance at specified Vds (F)
+%   C_rss            - Reverse transfer capacitance at specified Vds (F)
+%   capacitance_vds  - Vds voltage points (V) - returned in visualization mode
+%   capacitances     - Structure with all capacitance data - returned in visualization mode
+%
+% CAPACITANCE DEFINITIONS:
+%   C_iss - Input capacitance (gate-source + gate-drain)
+%   C_oss - Output capacitance (drain-source + gate-drain)
+%   C_rss - Reverse transfer capacitance (gate-drain)
+%
+% EXAMPLE:
+%   % Get capacitances at specific Vds
+%   [C_iss, C_oss, C_rss] = fet_capacitances(60);
+%
+%   % Visualize capacitance characteristics
+%   fet_capacitances();
+%
+% NOTES:
+%   - Capacitance data is interpolated for values between measured points
+%   - Data is based on datasheet plots of actual device measurements
+%
+% Author: Yosef Deray
+% Date: 2025
+% Version: 1.0
+    % Vds voltage points from FET datasheet for capacitance characterization
     capacitance_vds = [
     0.1
-    % actually traced
+    % Data points traced from FET datasheet
     1
     1.25892541179417
     1.58489319246111
@@ -36,10 +76,12 @@ function [C_iss, C_oss, C_rss, capacitance_vds, capacitances] = fet_capacitances
     1258.92541179417 
     ];
     
+    % Capacitance data from FET datasheet (in pF, converted to F)
+    % Columns: C_iss, C_oss, C_rss
     capacitances = 1e-12 * [
     % C_iss	C_oss	C_rss
     5.35e3	5.34e3	1260
-    % actually traced
+    % Data points traced from FET datasheet
     5.35e3	5.34e3	1260
     5.15e3	4.8e3	960
     4.75e3	4.25e3	570
@@ -75,16 +117,16 @@ function [C_iss, C_oss, C_rss, capacitance_vds, capacitances] = fet_capacitances
     
     ];
 
-    % C_iss	C_oss	C_rss
+    % Organize capacitance data into structure format
     capacitances = struct( ...
         'C_iss', capacitances(:, 1), ...
         'C_oss', capacitances(:, 2), ...
         'C_rss', capacitances(:, 3)...
     );
 
+    % Visualization mode - create capacitance vs Vds plot
     if ~nargin
-    
-        % Plotting
+        % Create log-log plot of FET capacitance characteristics
         figure;
         loglog(capacitance_vds, capacitances.C_iss * 1e12, 'LineWidth', 2); hold on;
         loglog(capacitance_vds, capacitances.C_oss * 1e12, 'LineWidth', 2);
@@ -92,13 +134,15 @@ function [C_iss, C_oss, C_rss, capacitance_vds, capacitances] = fet_capacitances
         grid on;
         xlabel('V_{DS} (V)');
         ylabel('Capacitance (pF)');
-        title('Capacitance vs V_{DS}');
+        title('MSC017SMA120B4N Capacitance vs V_{DS}');
         legend('C_{iss}', 'C_{oss}', 'C_{rss}');
     else
+        % Analysis mode - interpolate capacitance values at specified Vds
         if vds > max(capacitance_vds)
-            error('Target is outside the range of the vector.');
+            error('Target Vds is outside the range of the FET datasheet data.');
         end
 
+        % Interpolate capacitance values at specified Vds from FET datasheet data
         C_iss = interp1(capacitance_vds, capacitances.C_iss, vds);
         C_oss = interp1(capacitance_vds, capacitances.C_oss, vds);
         C_rss = interp1(capacitance_vds, capacitances.C_rss, vds);

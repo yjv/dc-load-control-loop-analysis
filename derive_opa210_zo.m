@@ -1,5 +1,49 @@
 function sys_fit = derive_opa210_zo(~)
-    % Your frequency data (Hz)
+% DERIVE_OPA210_ZO Generate OPA210 operational amplifier output impedance transfer function model
+%
+% This function provides a fitted transfer function model for the OPA210 operational
+% amplifier output impedance based on measured frequency response data from the datasheet.
+% The model captures the amplifier's output impedance characteristics across frequency
+% for use in control loop analysis.
+%
+% USAGE:
+%   sys_fit = derive_opa210_zo()           % Return fitted transfer function with plotting
+%   sys_fit = derive_opa210_zo(0)          % Return fitted transfer function only
+%
+% OUTPUTS:
+%   sys_fit - Symbolic transfer function model of OPA210 output impedance characteristics
+%
+% TRANSFER FUNCTION MODEL:
+%   The fitted model represents the OPA210 output impedance with appropriate
+%   poles and zeros to match the measured frequency response characteristics
+%   from the datasheet specifications.
+%
+% DATA SOURCE:
+%   Frequency response data is based on OPA210 datasheet specifications
+%   covering the range from 10 Hz to 100 MHz. Only magnitude data is
+%   available; phase data is not fitted.
+%
+% VISUALIZATION:
+%   When called with no arguments (~nargin), the function displays:
+%   - Single figure with log-log plot comparing fitted model vs. measured magnitude data
+%
+% EXAMPLE:
+%   % Get OPA210 output impedance model with visualization
+%   Z_opamp = derive_opa210_zo();
+%
+%   % Get model without plotting
+%   Z_opamp = derive_opa210_zo(0);
+%
+% NOTES:
+%   - Model is based on datasheet frequency response data
+%   - Fitted to match impedance magnitude characteristics (no phase data available)
+%   - Used in control loop analysis for G3 transfer function
+%   - Output impedance affects loop stability and load regulation
+%
+% Author: Yosef Deray
+% Date: 2025
+% Version: 1.0
+    % OPA210 frequency response data from datasheet (Hz)
     frequency = [
     10
     12.5892541179417
@@ -72,11 +116,11 @@ function sys_fit = derive_opa210_zo(~)
     6.30957344480194e7
     7.94328234724282e7
     1e8
-    ]';  % paste your frequency vector here
+    ]';  % OPA210 frequency response data from datasheet (Hz)
     
     w = 2*pi*frequency;
     
-    % Your gain data (dB)
+    % OPA210 output impedance data from datasheet (Ω)
     zo = [
     490
     390
@@ -149,42 +193,45 @@ function sys_fit = derive_opa210_zo(~)
     38
     40
     42
-    ]';   % paste your gain vector here
+    ]';   % OPA210 output impedance magnitude data (Ω)
     
     syms s
+    % Fitted transfer function model for OPA210 output impedance characteristics
     sys_fit = 4900/(s/(2*pi)+1)*(s/(2*pi*1.85e3)+1)*(s/(2*pi*2.1e5)+1)/(s/(2*pi*2.7e6)+1)*(s/(2*pi*1.35e8)+1)/(s/(2*pi*6.35e8)+1)^2;
     
     if ~nargin
-        % Compute magnitude and phase of fitted system
+        % Visualization mode: create output impedance plot comparing fitted model to datasheet data
+        % Compute magnitude and phase of fitted transfer function
         [zo_fit, phase_fit] = bode(tf_from_sym(sys_fit), w);
         zo_fit = squeeze(zo_fit);
         phase_fit = squeeze(phase_fit);
         
-        % Create figure and axes
+        % Create figure for output impedance plot visualization
         figure;
         
-        % Set up axes for background image
+        % Set up axes with logarithmic frequency scale
         ax = axes;
         hold on;
         
-        % Set limits to match your data range
-        ax.YDir = 'normal';  % flip y-axis so it's not upside down
-        ax.XScale = 'log';   % semilog scale
-        ax.YScale = 'log';   % semilog scale
+        % Configure axes properties
+        ax.YDir = 'normal';  % Normal y-axis direction
+        ax.XScale = 'log';   % Logarithmic frequency scale
+        ax.YScale = 'log';   % Logarithmic y-axis scale for impedance
         
-        % Overlay plot on top of image
+        % Plot impedance comparison (left y-axis)
         yyaxis left
-        
         semilogx(frequency, zo_fit, 'r-', 'LineWidth', 1.5); hold on;
         semilogx(frequency(1:length(zo)), zo, 'b.', 'MarkerSize', 10);
         ylabel('Z_o (\Omega)');
-        ylim([1, 1e3]);    % adjust based on your dB + phase range
+        ylim([1, 1e3]);    % Auto-scale y-axis with margin
         
+        % Plot phase response (right y-axis) - fitted model only (no datasheet phase data)
         yyaxis right
         semilogx(frequency, phase_fit, 'g--', 'LineWidth', 1.5);
         ylabel('Phase (degrees)');
-        ylim([min(phase_fit) - 10, max(phase_fit) + 10]);    % adjust based on your dB + phase range
+        ylim([min(phase_fit) - 10, max(phase_fit) + 10]);    % Auto-scale y-axis with margin
         
+        % Configure plot appearance
         xlabel('Frequency (Hz)');
         xlim([min(frequency), max(frequency)]);
         

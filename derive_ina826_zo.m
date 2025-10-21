@@ -1,5 +1,48 @@
 function sys_fit = derive_ina826_zo(~)
-        % Your frequency data (Hz)
+% DERIVE_INA826_ZO Generate INA826 instrumentation amplifier output impedance transfer function model
+%
+% This function provides a fitted transfer function model for the INA826 instrumentation
+% amplifier output impedance based on measured frequency response data from the datasheet.
+% The model captures the amplifier's output impedance characteristics across frequency
+% for use in control loop analysis.
+%
+% USAGE:
+%   sys_fit = derive_ina826_zo()           % Return fitted transfer function with plotting
+%   sys_fit = derive_ina826_zo(0)          % Return fitted transfer function only
+%
+% OUTPUTS:
+%   sys_fit - Symbolic transfer function model of INA826 output impedance characteristics
+%
+% TRANSFER FUNCTION MODEL:
+%   The fitted model represents the INA826 output impedance with appropriate
+%   poles and zeros to match the measured frequency response characteristics
+%   from the datasheet specifications.
+%
+% DATA SOURCE:
+%   Frequency response data is based on INA826 datasheet specifications
+%   covering the amplifier's output impedance behavior across frequency.
+%   Only magnitude data is available; phase data is not fitted.
+%
+% VISUALIZATION:
+%   When called with no arguments (~nargin), the function displays:
+%   - Single figure with output impedance vs. frequency plot comparing fitted model vs. measured magnitude data
+%
+% EXAMPLE:
+%   % Get INA826 output impedance model with visualization
+%   Z_ina = derive_ina826_zo();
+%
+%   % Get model without plotting
+%   Z_ina = derive_ina826_zo(0);
+%
+% NOTES:
+%   - Model is based on datasheet frequency response data
+%   - Fitted to match impedance magnitude characteristics (no phase data available)
+%   - INA826 is referenced but not directly used in the main control loop
+%
+% Author: Yosef Deray
+% Date: 2025
+% Version: 1.0
+        % Frequency points for INA826 output impedance measurement (Hz)
     frequency = [
     1
     1.25892541179417
@@ -72,11 +115,11 @@ function sys_fit = derive_ina826_zo(~)
     6.30957344480194e6
     7.94328234724282e6
     1e7
-    ]';  % paste your frequency vector here
+    ]';  % Frequency points for INA826 output impedance measurement (Hz)
     
     w = 2*pi*frequency;
     
-    % Your gain data (dB)
+    % INA826 output impedance data from datasheet (Ω)
     zo = [
     4e4
     3.5e4
@@ -150,43 +193,45 @@ function sys_fit = derive_ina826_zo(~)
     800
     950
 
-    ]';   % paste your gain vector here
+    ]';   % INA826 output impedance magnitude data (Ω)
     
 
     syms s
+    % Fitted transfer function model for INA826 output impedance characteristics
     sys_fit = 60000/(s/(2*pi*.7)+1)*(s/(2*pi*2.6e2)+1)*(s/(2*pi*1e5)+1)/(s/(2*pi*2.5e5)+1)*(s/(2*pi*4.7e6)+1);
     
     if ~nargin
-        % Compute magnitude and phase of fitted system
+        % Visualization mode: create output impedance plot comparing fitted model to datasheet data
+        % Compute magnitude and phase of fitted transfer function
         [zo_fit, phase_fit] = bode(tf_from_sym(sys_fit), w);
         zo_fit = squeeze(zo_fit);
         phase_fit = squeeze(phase_fit);
         
-        % Create figure and axes
+        % Create figure for output impedance plot visualization
         figure;
         
-        % Set up axes for background image
+        % Configure axes properties
         ax = axes;
         hold on;
         
-        % Set limits to match your data range
-        ax.YDir = 'normal';  % flip y-axis so it's not upside down
-        ax.XScale = 'log';   % semilog scale
-        ax.YScale = 'log';   % semilog scale
+        ax.YDir = 'normal';  % Normal y-axis direction
+        ax.XScale = 'log';   % Logarithmic frequency scale
+        ax.YScale = 'log';   % Logarithmic y-axis scale for impedance
         
-        % Overlay plot on top of image
+        % Plot impedance comparison (left y-axis)
         yyaxis left
-        
         semilogx(frequency, zo_fit, 'r-', 'LineWidth', 1.5); hold on;
         semilogx(frequency(1:length(zo)), zo, 'b.', 'MarkerSize', 10);
         ylabel('Z_o (\Omega)');
-        ylim([100, 100e3]);    % adjust based on your dB + phase range
+        ylim([100, 100e3]);    % Auto-scale y-axis with margin
         
+        % Plot phase response (right y-axis) - fitted model only (no datasheet phase data)
         yyaxis right
         semilogx(frequency, phase_fit, 'g--', 'LineWidth', 1.5);
         ylabel('Phase (degrees)');
-        ylim([min(phase_fit) - 10, max(phase_fit) + 10]);    % adjust based on your dB + phase range
+        ylim([min(phase_fit) - 10, max(phase_fit) + 10]);    % Auto-scale y-axis with margin
         
+        % Configure plot appearance
         xlabel('Frequency (Hz)');
         xlim([min(frequency), max(frequency)]);
         

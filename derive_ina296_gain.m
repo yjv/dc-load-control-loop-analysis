@@ -1,5 +1,49 @@
 function sys_fit = derive_ina296_gain(~)
-    % Your frequency data (Hz)
+% DERIVE_INA296_GAIN Generate INA296 current sense amplifier gain transfer function model
+%
+% This function provides a fitted transfer function model for the INA296 current sense
+% amplifier based on measured frequency response data from the datasheet. The model
+% captures the amplifier's gain characteristics across frequency for use in control
+% loop analysis.
+%
+% USAGE:
+%   sys_fit = derive_ina296_gain()           % Return fitted transfer function with plotting
+%   sys_fit = derive_ina296_gain(0)          % Return fitted transfer function only
+%
+% OUTPUTS:
+%   sys_fit - Symbolic transfer function model of INA296 gain characteristics
+%
+% TRANSFER FUNCTION MODEL:
+%   The fitted model represents the INA296 gain with appropriate poles and zeros
+%   to match the measured frequency response characteristics from the datasheet.
+%
+% DATA SOURCE:
+%   Frequency response data is based on INA296 datasheet specifications
+%   covering the range from 11 Hz to 12.6 MHz. Only magnitude data is
+%   available; phase data is not fitted.
+%
+% VISUALIZATION:
+%   When called with no arguments (~nargin), the function displays:
+%   - Single figure with Bode plot comparing fitted model vs. measured magnitude data
+%
+% EXAMPLE:
+%   % Get INA296 gain model with visualization
+%   H_ina = derive_ina296_gain();
+%
+%   % Get model without plotting
+%   H_ina = derive_ina296_gain(0);
+%
+% NOTES:
+%   - Model is based on datasheet frequency response data
+%   - Fitted to match gain rolloff characteristics (no phase data available)
+%   - Used in control loop analysis for H2 transfer function
+%   - INA296 provides 50x gain at DC, varying with frequency
+%
+% Author: Yosef Deray
+% Date: 2025
+% Version: 1.0
+
+    % Frequency points for INA296 gain measurement (Hz)
     frequency = [
     11.2589254117942
     11.5848931924611
@@ -72,11 +116,10 @@ function sys_fit = derive_ina296_gain(~)
     7.94329234724282E+06
     1.000001E+07 
     1.25893541179417E+07
-    ]';  % paste your frequency vector here
+    ]';  % Frequency points for INA296 gain measurement (Hz)
     
     w = 2*pi*frequency;
     
-    % Your gain data (dB)
     gain_db = [
     33.9794000867204
     33.9794000867204
@@ -148,49 +191,50 @@ function sys_fit = derive_ina296_gain(~)
     13.6248247475117
     8.94316062684439
     3.52182518111363
-    ]';   % paste your gain vector here
+    ]';   % INA296 gain magnitude data (dB)
     
     syms s
+    % Fitted transfer function model for INA296 gain characteristics
     sys_fit = 50/(s/(2*pi*1.1e6)+1)^3*(s/(2*pi*8e5)+1)/(s/(2*pi*2.8e6)+1)/(s/(2*pi*1.1e7)+1)*(s/(2*pi*1.05e6)+1);
 
     if ~nargin
-        % Compute magnitude and phase of fitted system
+        % Visualization mode: create Bode plot comparing fitted model to datasheet data
+        % Compute magnitude and phase of fitted transfer function
         [mag_fit, phase_fit] = bode(tf_from_sym(sys_fit), w);
         mag_fit = squeeze(mag_fit);
         phase_fit = squeeze(phase_fit);
         
+        % Convert magnitude to dB for comparison with datasheet data
         mag_fit_db = 20*log10(mag_fit);
         
-        % Create figure and axes
+        % Create figure for Bode plot visualization
         figure;
         
-        % Set up axes for background image
+        % Configure axes properties
         ax = axes;
         hold on;
         
-        % Set limits to match your data range
-        ax.YDir = 'normal';  % flip y-axis so it's not upside down
-        ax.XScale = 'log';   % semilog scale
+        ax.YDir = 'normal';  % Normal y-axis direction
+        ax.XScale = 'log';   % Logarithmic frequency scale
         
-        % Overlay plot on top of image
+        % Plot magnitude comparison (left y-axis)
         yyaxis left
         semilogx(frequency, mag_fit_db, 'r-', 'LineWidth', 1.5); hold on;
         semilogx(frequency(1:length(gain_db)), gain_db, 'b.', 'MarkerSize', 10);
         ylabel('Magnitude (dB)');
-        ylim([min(mag_fit_db) - 5, max(mag_fit_db) + 5]);    % adjust based on your dB + phase range
+        ylim([min(mag_fit_db) - 5, max(mag_fit_db) + 5]);    % Auto-scale y-axis with margin
         
+        % Plot phase response (right y-axis) - fitted model only (no datasheet phase data)
         yyaxis right
         semilogx(frequency, phase_fit, 'g--', 'LineWidth', 1.5);
         ylabel('Phase (degrees)');
-        ylim([min(phase_fit) - 10, max(phase_fit) + 10]);    % adjust based on your dB + phase range
+        ylim([min(phase_fit) - 10, max(phase_fit) + 10]);    % Auto-scale y-axis with margin
         
+        % Configure plot appearance
         xlabel('Frequency (Hz)');
         xlim([min(frequency), max(frequency)]);
         
         legend('Fitted Mag', 'Data Mag', 'Fitted Phase', 'Location', 'Best');
         grid on;
-        
-        % figure;
-        % rlocus(sys_fit)
     end
 end
